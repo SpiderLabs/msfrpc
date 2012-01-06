@@ -1,0 +1,40 @@
+=====================
+Metasploit MSGRPC Modules
+Ryan Linn  <rlinn@trustwave.com>
+http://www.trustwave.com
+=====================
+-----------------------------------------------------
+Modules for communicating with Metasploit MSGRPC
+-----------------------------------------------------
+
+
+Introduction
+============
+This repository contains two modules for communicating with Metasploit's
+MSGRPC Server.  The followign modules are separated by language:
+
+	Net-MSFRPC - Perl Metasploit MSGRPC module
+	python-msfrpc - Python Metasploit MSGRPC module
+
+Each of these modules contains their own README files. These README
+files contain instructions for building and using each of the types
+of modules.
+
+		
+Copyright
+=========
+Modues by Ryan Linn
+Copyright (C) 2012 Trustwave Holdings, Inc.
+ 
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+ 
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
