@@ -1,17 +1,16 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
 # MSF-RPC - A  Python library to facilitate MSG-RPC communication with Metasploit
-# Ryan Linn  - RLinn@trustwave.com
+# Ryan Linn  - RLinn@trustwave.com, Marcello Salvati - byt3bl33d3r@gmail.com
 # Copyright (C) 2011 Trustwave
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import requests
 import msgpack
-import httplib
 
 class Msfrpc:
+
   class MsfError(Exception):
     def __init__(self,msg):
       self.msg = msg
@@ -21,47 +20,52 @@ class Msfrpc:
   class MsfAuthError(MsfError):
     def __init__(self,msg):
       self.msg = msg
-    
+  
   def __init__(self,opts=[]):
     self.host = opts.get('host') or "127.0.0.1"
-    self.port = opts.get('port') or 55552
+    self.port = opts.get('port') or "55552"
     self.uri = opts.get('uri') or "/api/"
     self.ssl = opts.get('ssl') or False
-    self.authenticated = False
-    self.token = False
-    self.headers = {"Content-type" : "binary/message-pack" }
-    if self.ssl:
-      self.client = httplib.HTTPSConnection(self.host,self.port)
-    else:
-      self.client = httplib.HTTPConnection(self.host,self.port)
- 
-  def encode(self,data):
+    self.token = None
+    self.headers = {"Content-type" : "binary/message-pack"}
+
+  def encode(self, data):
     return msgpack.packb(data)
-  def decode(self,data):
+
+  def decode(self, data):
     return msgpack.unpackb(data)
 
-  def call(self,meth,opts = []):
-    if meth != "auth.login":
-      if not self.authenticated:
+  def call(self, method, opts=[]):
+    if method != 'auth.login':
+      if self.token == None:
         raise self.MsfAuthError("MsfRPC: Not Authenticated")
 
-    if meth != "auth.login":
-      opts.insert(0,self.token)
+    if method != "auth.login":
+      opts.insert(0, self.token)
 
-    opts.insert(0,meth)
-    params = self.encode(opts)
-    self.client.request("POST",self.uri,params,self.headers)
-    resp = self.client.getresponse()
-    return self.decode(resp.read()) 
-  
-  def login(self,user,password):
-    ret = self.call('auth.login',[user,password])
-    if ret.get('result') == 'success':
-	self.authenticated = True
-        self.token = ret.get('token')
-        return True
+    if self.ssl == True:
+      url = "https://%s:%s%s" % (self.host, self.port, self.uri)
     else:
-        raise self.MsfAuthError("MsfRPC: Authentication failed")
+      url = "http://%s:%s%s" % (self.host, self.port, self.uri)
+  
+
+    opts.insert(0, method)
+    payload = self.encode(opts)
+
+    r = requests.post(url, data=payload, headers=self.headers)
+
+    opts[:] = [] #Clear opts list
+    
+    return self.decode(r.content)
+
+  def login(self, user, password):
+    auth = self.call("auth.login", [user, password])
+    try:
+      if auth['result'] == 'success':
+        self.token = auth['token']
+        return True
+    except:
+      raise self.MsfAuthError("MsfRPC: Authentication failed")
 
 if __name__ == '__main__':
   
@@ -81,4 +85,3 @@ if __name__ == '__main__':
   ret = client.call('module.compatible_payloads',[mod['modules'][0]])
   for i in (ret.get('payloads')):
     print "\t%s" % i
-
